@@ -11,6 +11,9 @@
 #include "esp_system.h"
 #include "spi_flash_mmap.h"
 
+#define NUM_TIMERS 2
+TimerHandle_t xTimers[NUM_TIMERS];
+
 /* Task to be created. */
 void vTask1(void *pvParameters)
 {
@@ -21,26 +24,34 @@ void vTask1(void *pvParameters)
     }
 }
 
-void vTask2(void *pvParameters)
-{
-    for (;;)
-    {
-        printf("Task 2\n");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
+// void vTask2(void *pvParameters)
+// {
+//     for (;;)
+//     {
+//         printf("Task 2\n");
+//         vTaskDelay(1000 / portTICK_PERIOD_MS);
+//     }
+// }
 
-void vTask3(void *pvParameters)
+void vTimerCallback(TimerHandle_t xTimer)
 {
-    for (;;)
+    /* Optionally do something if the pxTimer parameter is NULL. */
+    configASSERT(xTimer);
+    ulCount = (uint32_t)pvTimerGetTimerID(xTimer);
+    if (ulCount == 0)
     {
-        printf("Task 3\n");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    else if (ulCount == 1)
+    {
+        /* code */
     }
 }
 
 void app_main(void)
 {
+    xTimers[0] = xTimerCreate("TimerBlink", pdMS_TO_TICKS(500), pdTRUE, (void *)0, vTimerCallback);
+    xTimers[1] = xTimerCreate("TimerPrint", pdMS_TO_TICKS(1000), pdTRUE, (void *)1, vTimerCallback);
+
     /* Create the task, storing the handle. */
     xTaskCreate(
         vTask1,   /* Function that implements the task. */
@@ -50,19 +61,10 @@ void app_main(void)
         4,        /* Priority at which the task is created. */
         NULL);    /* Used to pass out the created task's handle. */
 
-    xTaskCreate(
-        vTask2,   /* Function that implements the task. */
-        "vTask2", /* Text name for the task. */
-        2048,     /* Stack size in words, not bytes. */
-        NULL,     /* Parameter passed into the task. */
-        5,        /* Priority at which the task is created. */
-        NULL);    /* Used to pass out the created task's handle. */
-
-    xTaskCreate(
-        vTask3,   /* Function that implements the task. */
-        "vTask3", /* Text name for the task. */
-        2048,     /* Stack size in words, not bytes. */
-        NULL,     /* Parameter passed into the task. */
-        6,        /* Priority at which the task is created. */
-        NULL);    /* Used to pass out the created task's handle. */
-}
+    // xTaskCreate(
+    //     vTask2,   /* Function that implements the task. */
+    //     "vTask2", /* Text name for the task. */
+    //     2048,     /* Stack size in words, not bytes. */
+    //     NULL,     /* Parameter passed into the task. */
+    //     5,        /* Priority at which the task is created. */
+    //     NULL);    /* Used to pass out the created task's handle. */
